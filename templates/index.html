@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>习惯追踪器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f7fb;
+            padding: 2rem 1rem;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .add-habit {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .add-habit .field {
+            flex: 1;
+            min-width: 150px;
+        }
+        .add-habit label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: #475569;
+        }
+        .add-habit input {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .add-habit input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button.secondary {
+            background: #ef4444;
+        }
+        button.secondary:hover {
+            background: #dc2626;
+        }
+        .habits-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .habit-card {
+            background: white;
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            padding: 1.25rem;
+            transition: 0.1s;
+            border: 1px solid #e2e8f0;
+        }
+        .habit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .habit-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            word-break: break-word;
+        }
+        .habit-target {
+            font-size: 0.8rem;
+            background: #f1f5f9;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            color: #334155;
+        }
+        .week-progress {
+            margin: 1rem 0;
+            background: #e2e8f0;
+            border-radius: 1rem;
+            height: 8px;
+            overflow: hidden;
+        }
+        .week-progress-bar {
+            background: #3b82f6;
+            width: 0%;
+            height: 100%;
+            border-radius: 1rem;
+            transition: width 0.2s;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #475569;
+            margin: 0.6rem 0 1rem 0;
+        }
+        .days-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .day-btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .day-btn.completed {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+        .day-btn:hover {
+            transform: scale(0.96);
+            background: #e2e8f0;
+        }
+        .delete-btn {
+            background: none;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            padding: 0.2rem 0.5rem;
+            box-shadow: none;
+            margin-left: 0.5rem;
+        }
+        .delete-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        @media (max-width: 640px) {
+            .days-buttons button {
+                padding: 0.3rem 0.7rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📅 习惯追踪看板</h1>
+
+    <div class="add-habit">
+        <div class="field">
+            <label>📌 习惯名称</label>
+            <input type="text" id="habitName" placeholder="例如：晨间冥想" autocomplete="off">
+        </div>
+        <div class="field">
+            <label>🎯 每周目标天数 (1-7)</label>
+            <input type="number" id="targetDays" min="1" max="7" value="5">
+        </div>
+        <button id="addBtn">➕ 添加习惯</button>
+    </div>
+
+    <div id="habitsList" class="habits-grid">
+        <!-- 动态加载习惯卡片 -->
+        <div style="text-align:center; color:#94a3b8;">加载中...</div>
+    </div>
+</div>
+
+<script>
+    // 获取本周一到周日的日期数组 (YYYY-MM-DD)
+    function getWeekDates() {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0周日 ~ 6周六
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + mondayOffset);
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            weekDates.push(d.toISOString().slice(0,10));
+        }
+        return weekDates;
+    }
+
+    let habitsData = [];      // 存储习惯列表 {id, name, targetDays}
+    let completionsMap = {};  // { habitId: Set(dates) }
+
+    async function fetchHabits() {
+        const res = await fetch('/api/habits');
+        habitsData = await res.json();
+        await fetchAllCompletions();
+        renderHabits();
+    }
+
+    async function fetchAllCompletions() {
+        completionsMap = {};
+        for (let habit of habitsData) {
+            const res = await fetch(`/api/completions/${habit.id}`);
+            const dates = await res.json();
+            completionsMap[habit.id] = new Set(dates);
+        }
+    }
+
+    async function addHabit(name, targetDays) {
+        const res = await fetch('/api/habits', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, targetDays})
+        });
+        if (res.ok) {
+            await fetchHabits();
+        } else {
+            alert('添加失败');
+        }
+    }
+
+    async function deleteHabit(habitId) {
+        if (!confirm('删除习惯会清除所有打卡记录，确定吗？')) return;
+        await fetch(`/api/habits/${habitId}`, {method: 'DELETE'});
+        await fetchHabits();
+    }
+
+    async function toggleCompletion(habitId, date, isCompleted) {
+        if (isCompleted) {
+            // 取消打卡
+            await fetch('/api/completions', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({habitId, date})
+            });
+        } else {
+            // 打卡
+            await fetch('/api/completions', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({habitId, date})
+            });
+        }
+        await fetchAllCompletions();
+        renderHabits();
+    }
+
+    function renderHabits() {
+        const container = document.getElementById('habitsList');
+        if (!habitsData.length) {
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8;">✨ 还没有习惯，添加一个开始追踪吧</div>`;
+            return;
+        }
+        const weekDates = getWeekDates();
+        const todayStr = new Date().toISOString().slice(0,10);
+        
+        let html = '';
+        for (let habit of habitsData) {
+            const habitId = habit.id;
+            const target = habit.targetDays;
+            const completionsSet = completionsMap[habitId] || new Set();
+            
+            // 计算本周完成次数
+            let weekCompletedCount = 0;
+            weekDates.forEach(date => {
+                if (completionsSet.has(date)) weekCompletedCount++;
+            });
+            const progressPercent = Math.min(100, (weekCompletedCount / target) * 100);
+            
+            html += `
+                <div class="habit-card">
+                    <div class="habit-header">
+                        <span class="habit-name">${escapeHtml(habit.name)}</span>
+                        <div>
+                            <span class="habit-target">🎯 ${target}/7天/周</span>
+                            <button class="delete-btn" data-id="${habitId}">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="week-progress">
+                        <div class="week-progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                    <div class="stats">
+                        <span>📆 本周打卡: ${weekCompletedCount} / ${target}</span>
+                        <span>${progressPercent >= 100 ? '✅ 已完成本周目标' : '📈 继续加油'}</span>
+                    </div>
+                    <div class="days-buttons">
+            `;
+            // 显示本周的7天按钮
+            weekDates.forEach(date => {
+                const isCompleted = completionsSet.has(date);
+                const isToday = (date === todayStr);
+                let label = date.slice(5); // MM-DD
+                if (isToday) label = '今天';
+                else {
+                    const d = new Date(date);
+                    label = `${d.getMonth()+1}/${d.getDate()}`;
+                }
+                html += `<button class="day-btn ${isCompleted ? 'completed' : ''}" 
+                            data-date="${date}" data-habit="${habitId}">${label}</button>`;
+            });
+            html += `</div></div>`;
+        }
+        container.innerHTML = html;
+        
+        // 绑定删除按钮事件
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                deleteHabit(id);
+            });
+        });
+        // 绑定打卡按钮事件
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const habitId = parseInt(btn.dataset.habit);
+                const date = btn.dataset.date;
+                const isCompleted = btn.classList.contains('completed');
+                toggleCompletion(habitId, date, isCompleted);
+            });
+        });
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+        const name = document.getElementById('habitName').value.trim();
+        let targetDays = parseInt(document.getElementById('targetDays').value);
+        if (!name) return alert('请输入习惯名称');
+        if (isNaN(targetDays)) targetDays = 5;
+        targetDays = Math.min(7, Math.max(1, targetDays));
+        addHabit(name, targetDays);
+        document.getElementById('habitName').value = '';
+        document.getElementById('targetDays').value = 5;
+    });
+
+    // 初始化加载
+    fetchHabits();
+</script>
+</body>
+</html>
